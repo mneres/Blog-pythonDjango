@@ -1,0 +1,8 @@
+{% extends 'blog/base.html' %}
+{% block content %}
+    <h1>New comment</h1>
+    <form method="post" action="/post/import/load">
+        <p>Type url in the form and press enter to get hyperlinks</p>
+        <p><input type="text" name="url"></p>
+    </form>
+{% endblock %}
