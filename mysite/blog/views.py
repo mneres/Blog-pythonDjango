@@ -91,40 +91,53 @@ def import_post(request):
 
 @csrf_exempt
 def soup_load_post(request):
-    url=request.POST.get('url')
-    imgs = []
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req) as response:
-        page = response.read()
 
-    soup = BeautifulSoup(page)
+    if request.method == "POST":
+        form = PostForm(request.POST)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return redirect('blog.views.post_detail', pk=post.pk)
+    else:
+        try:
+            url=request.GET['url']
+            imgs = []
+            req = urllib.request.Request(url, headers={'User-Agent' : "Magic Browser"})
+            with urllib.request.urlopen(req) as response:
+                page = response.read()
 
-    #Save all images
-    for img in soup.find_all('img'):
-        if img['src'].find("http") == 0:
-            imgs.append(img['src'])
+            soup = BeautifulSoup(page)
 
-    # kill all script and style elements
-    for script in soup(["script", "style"]):
-        script.extract()    # rip it out
+            '''#Save all images
+            for img in soup.find_all('img'):
+                if img['src'].find("http") == 0:
+                    imgs.append(img['src'])
 
-    comments = soup.findAll(text=lambda text:isinstance(text, Comment))
-    [comment.extract() for comment in comments]
+            # kill all script and style elements
+            for script in soup(["script", "style"]):
+                script.extract()    # rip it out
 
-    # get title
-    title = soup.title
+            comments = soup.findAll(text=lambda text:isinstance(text, Comment))
+            [comment.extract() for comment in comments]'''
 
-    # get text
-    text = soup.get_text()
+            # get title
+            title = soup.title
 
-    # break into lines and remove leading and trailing space on each
-    lines = (line.strip() for line in text.splitlines())
-    # break multi-headlines into a line each
-    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-    # drop blank lines
-    text = '\n'.join(chunk for chunk in chunks if chunk)
+            # get text
+            text = soup.get_text()
 
-    post = Post(title=title, text=text)
-    form = PostForm(instance=post)
+            # break into lines and remove leading and trailing space on each
+            lines = (line.strip() for line in text.splitlines())
+            # break multi-headlines into a line each
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            # drop blank lines
+            text = '\n'.join(chunk for chunk in chunks if chunk)
 
-    return render(request, 'blog/post_edit.html', {'form': form})
+            post = Post(title=title, text=text)
+            form = PostForm(instance=post)
+
+            return render(request, 'blog/post_edit.html', {'form': form})
+
+        except Exception as e:
+            return render(request, 'blog/import_post.html', {})

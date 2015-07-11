@@ -1,8 +1,14 @@
 {% extends 'blog/base.html' %}
 {% block content %}
-    <h1>New comment</h1>
-    <form method="post" action="/post/import/load">
-        <p>Type url in the form and press enter to get hyperlinks</p>
-        <p><input type="text" name="url"></p>
-    </form>
+    <div class="form-group">
+        {% if form.errors %}
+        <p>Erro ao importar Post</p>
+        {% endif %}
+        <h1>Importar Post</h1>
+        <form method="GET" action="/post/import/load">
+            <p>Digite a URL de seu Post!</p>
+            <p><input type="text" name="url" class="form-control"/></p>
+            <p><input type="submit" value="Importar Post" class="btn btn-primary"/></p>
+        </form>
+    </div>
 {% endblock %}
