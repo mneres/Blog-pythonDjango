@@ -2,15 +2,32 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import login
 from django.views.decorators.csrf import csrf_exempt
 from .models import Post, Comment
 from .forms import PostForm, CommentForm, ImportPostForm
 from bs4 import BeautifulSoup, Comment
 import urllib.request
 
+def add_user(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            return redirect('/accounts/login/', pk = user.pk)
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/add_user.html', {'form': form})
+
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    return render(request, 'blog/post_list.html', {'posts': posts})
+
+def list_my_post(request):
+    posts = Post.objects.filter(author=request.user.pk).order_by('published_date')
     return render(request, 'blog/post_list.html', {'posts': posts})
 
 def post_detail(request, pk):
@@ -34,30 +51,37 @@ def post_new(request):
 def post_edit(request, pk):
     post = get_object_or_404(Post, pk=pk)
     if request.method == "POST":
-        form = PostForm(request.POST, instance=post)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            return redirect('blog.views.post_detail', pk=post.pk)
+        if post.author_id == request.user.pk:
+            form = PostForm(request.POST, instance=post)
+            if form.is_valid():
+                post = form.save(commit=False)
+                post.author = request.user
+                post.save()
+                return redirect('blog.views.post_detail', pk=post.pk)
+        else:
+            form = PostForm(instance=post)
     else:
         form = PostForm(instance=post)
     return render(request, 'blog/post_edit.html', {'form': form})
 
+@login_required
 def post_draft_list(request):
-    posts = Post.objects.filter(published_date__isnull=True).order_by('created_date')
+    posts = Post.objects.filter(published_date__isnull=True, author=request.user.pk).order_by('created_date')
     return render(request, 'blog/post_draft_list.html', {'posts': posts})
 
 @login_required
 def post_publish(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    post.publish()
+    if request.user.is_authenticated():
+        post = get_object_or_404(Post, pk=pk)
+        if post.author_id == request.user.pk:
+            post.publish()
     return redirect('blog.views.post_detail', pk=pk)
 
 @login_required
 def post_remove(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    post.delete()
+    if post.author_id == request.user.pk:
+        post.delete()
     return redirect('blog.views.post_list')
 
 def add_comment_to_post(request, pk):
@@ -109,20 +133,8 @@ def soup_load_post(request):
 
             soup = BeautifulSoup(page)
 
-            '''#Save all images
-            for img in soup.find_all('img'):
-                if img['src'].find("http") == 0:
-                    imgs.append(img['src'])
-
-            # kill all script and style elements
-            for script in soup(["script", "style"]):
-                script.extract()    # rip it out
-
-            comments = soup.findAll(text=lambda text:isinstance(text, Comment))
-            [comment.extract() for comment in comments]'''
-
             # get title
-            title = soup.title
+            title = soup("title")
 
             # get text
             text = soup.get_text()
@@ -131,8 +143,21 @@ def soup_load_post(request):
             lines = (line.strip() for line in text.splitlines())
             # break multi-headlines into a line each
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            # drop blank lines
-            text = '\n'.join(chunk for chunk in chunks if chunk)
+
+            cont = 0
+            cont_aux = 0
+            text_aux = ""
+
+            for chunk in chunks:
+                if chunk == "":
+                    if cont < cont_aux:
+                        text = text_aux
+                        cont = cont_aux
+                    text_aux = ""
+                    cont_aux = 0
+                else:
+                    text_aux += chunk
+                    cont_aux += len(chunk)
 
             post = Post(title=title, text=text)
             form = PostForm(instance=post)

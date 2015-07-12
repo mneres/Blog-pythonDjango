@@ -18,6 +18,7 @@
                 <p class="top-menu">Bem-vindo, {{ user.username }}<small></small></p>
             {% else %}
                 <a href="{% url 'django.contrib.auth.views.login' %}" class="top-menu"><span class="glyphicon glyphicon-lock"></span></a>
+                <p><a href="{% url 'add_user' %}" class="top-menu">Cadastre-se é grátis</a></p>
             {% endif %}
 
             <h1><a href="{% url 'blog.views.post_list' %}">Django Blog</a></h1>
@@ -25,6 +26,20 @@
 
         <div class="content">
             <div class="row">
+                {% if user.is_authenticated %}
+                <div class="col-md-3">
+                   <div class="list-group">
+                      <a href="#" class="list-group-item list-group-item-success">
+                        Gerencie seus Posts
+                      </a>
+                      <a href="{% url 'list_my_post' %}" class="list-group-item">Meus Posts</a>
+                      <a href="{% url 'post_draft_list' %}" class="list-group-item">Rascunhos</a>
+                      <a href="{% url 'post_new' %}" class="list-group-item">Adicionar Post</a>
+                      <a href="{% url 'import_post' %}" class="list-group-item">Importar Post</a>
+                       <a href="#" class="list-group-item">Editar Perfil</a>
+                    </div>
+                </div>
+                {% endif %}
                 <div class="col-md-8">
                 {% block content %}
                 {% endblock %}
