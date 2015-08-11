@@ -1,14 +1,14 @@
-from django.shortcuts import render
 from django.utils import timezone
+from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import login
 from django.views.decorators.csrf import csrf_exempt
-from .models import Post, Comment
-from .forms import PostForm, CommentForm, ImportPostForm
+from django.contrib.auth.decorators import login_required
+
+from .forms import PostForm, CommentForm
+from .models import Post, Image
+from .bsoup import safe_html
+
 from bs4 import BeautifulSoup, Comment
 import urllib.request
 
@@ -115,54 +115,36 @@ def import_post(request):
 
 @csrf_exempt
 def soup_load_post(request):
+    try:
+        url=request.GET['url']
+        imgs = []
+        req = urllib.request.Request(url, headers={'User-Agent' : "Magic Browser"})
+        with urllib.request.urlopen(req) as response:
+            page = response.read()
 
-    if request.method == "POST":
-        form = PostForm(request.POST)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            return redirect('blog.views.post_detail', pk=post.pk)
-    else:
-        try:
-            url=request.GET['url']
-            imgs = []
-            req = urllib.request.Request(url, headers={'User-Agent' : "Magic Browser"})
-            with urllib.request.urlopen(req) as response:
-                page = response.read()
+        soup = BeautifulSoup(page, "html.parser")
+        title = soup("title")
 
-            soup = BeautifulSoup(page)
+        for img in soup.find_all('img'):
+            if img['src'].find("http") == 0:
+                imgs.append(img['src'])
 
-            # get title
-            title = soup("title")
+        page = safe_html(page)
 
-            # get text
-            text = soup.get_text()
+        soup = BeautifulSoup(page, "html.parser")
 
-            # break into lines and remove leading and trailing space on each
-            lines = (line.strip() for line in text.splitlines())
-            # break multi-headlines into a line each
-            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        # get text
+        text = soup.get_text()
 
-            cont = 0
-            cont_aux = 0
-            text_aux = ""
+        post = Post(title=title, text=text, url=url)
+        post.author = request.user
+        post.save()
 
-            for chunk in chunks:
-                if chunk == "":
-                    if cont < cont_aux:
-                        text = text_aux
-                        cont = cont_aux
-                    text_aux = ""
-                    cont_aux = 0
-                else:
-                    text_aux += chunk
-                    cont_aux += len(chunk)
+        for i in imgs:
+            image = Image(post = post, url = i)
+            image.save()
 
-            post = Post(title=title, text=text)
-            form = PostForm(instance=post)
+        return redirect('blog.views.post_detail', pk=post.pk)
 
-            return render(request, 'blog/post_edit.html', {'form': form})
-
-        except Exception as e:
-            return render(request, 'blog/import_post.html', {})
+    except Exception as e:
+        return render(request, 'blog/import_post.html', {"msg": "Link está zoado!"})

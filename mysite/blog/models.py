@@ -9,6 +9,7 @@ class Post(models.Model):
             default=timezone.now)
     published_date = models.DateTimeField(
             blank=True, null=True)
+    url = models.CharField(max_length=200)
 
     def publish(self):
         self.published_date = timezone.now()
@@ -19,6 +20,13 @@ class Post(models.Model):
 
     def approved_comments(self):
         return self.comments.filter(approved=True)
+
+class Image(models.Model):
+    post = models.ForeignKey('blog.Post', related_name='images')
+    url = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.text
 
 class Comment(models.Model):
     post = models.ForeignKey('blog.Post', related_name='comments')

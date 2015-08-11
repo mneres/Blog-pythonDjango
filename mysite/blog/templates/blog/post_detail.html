@@ -22,6 +22,13 @@
     <a class="btn btn-default" href="{% url 'add_comment_to_post' pk=post.pk %}">Add comment</a>
 
     <hr>
+
+    {% for image in post.images.all %}
+        {{image.url}}
+    {% endfor %}
+
+
+    <hr>
     {% for comment in post.comments.all %}
         {% if user.is_authenticated or comment.approved %}
             <div class="comment">
