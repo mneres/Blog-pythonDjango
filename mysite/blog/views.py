@@ -1,4 +1,3 @@
-from django.utils import timezone
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
@@ -23,11 +22,11 @@ def add_user(request):
     return render(request, 'registration/add_user.html', {'form': form})
 
 def post_list(request):
-    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
-    return render(request, 'blog/post_list.html', {'posts': posts})
+    posts = Post.objects.order_by('created_date')
+    return render(request, 'blog/home.html', {'posts': posts})
 
 def list_my_post(request):
-    posts = Post.objects.filter(author=request.user.pk).order_by('published_date')
+    posts = Post.objects.filter(author=request.user.pk).order_by('created_date')
     return render(request, 'blog/post_list.html', {'posts': posts})
 
 def post_detail(request, pk):
@@ -47,35 +46,6 @@ def post_new(request):
         form = PostForm()
     return render(request, 'blog/post_edit.html', {'form': form})
 
-@login_required
-def post_edit(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    if request.method == "POST":
-        if post.author_id == request.user.pk:
-            form = PostForm(request.POST, instance=post)
-            if form.is_valid():
-                post = form.save(commit=False)
-                post.author = request.user
-                post.save()
-                return redirect('blog.views.post_detail', pk=post.pk)
-        else:
-            form = PostForm(instance=post)
-    else:
-        form = PostForm(instance=post)
-    return render(request, 'blog/post_edit.html', {'form': form})
-
-@login_required
-def post_draft_list(request):
-    posts = Post.objects.filter(published_date__isnull=True, author=request.user.pk).order_by('created_date')
-    return render(request, 'blog/post_draft_list.html', {'posts': posts})
-
-@login_required
-def post_publish(request, pk):
-    if request.user.is_authenticated():
-        post = get_object_or_404(Post, pk=pk)
-        if post.author_id == request.user.pk:
-            post.publish()
-    return redirect('blog.views.post_detail', pk=pk)
 
 @login_required
 def post_remove(request, pk):
@@ -96,12 +66,6 @@ def add_comment_to_post(request, pk):
     else:
         form = CommentForm()
     return render(request, 'blog/add_comment_to_post.html', {'form': form})
-
-@login_required
-def comment_approve(request, pk):
-    comment = get_object_or_404(Comment, pk=pk)
-    comment.approve()
-    return redirect('blog.views.post_detail', pk=comment.post.pk)
 
 @login_required
 def comment_remove(request, pk):
