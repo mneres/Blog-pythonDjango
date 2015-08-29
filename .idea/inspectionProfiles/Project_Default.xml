@@ -1,0 +1,27 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="14">
+            <item index="0" class="java.lang.String" itemvalue="louis" />
+            <item index="1" class="java.lang.String" itemvalue="lxml" />
+            <item index="2" class="java.lang.String" itemvalue="oneconf" />
+            <item index="3" class="java.lang.String" itemvalue="pycurl" />
+            <item index="4" class="java.lang.String" itemvalue="onboard" />
+            <item index="5" class="java.lang.String" itemvalue="xkit" />
+            <item index="6" class="java.lang.String" itemvalue="language-selector" />
+            <item index="7" class="java.lang.String" itemvalue="usb-creator" />
+            <item index="8" class="java.lang.String" itemvalue="xdiagnose" />
+            <item index="9" class="java.lang.String" itemvalue="pygobject" />
+            <item index="10" class="java.lang.String" itemvalue="unattended-upgrades" />
+            <item index="11" class="java.lang.String" itemvalue="pycrypto" />
+            <item index="12" class="java.lang.String" itemvalue="plainbox" />
+            <item index="13" class="java.lang.String" itemvalue="software-center-aptd-plugins" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

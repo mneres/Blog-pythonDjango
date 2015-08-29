@@ -13,7 +13,20 @@ class Post(models.Model):
         return self.title
 
     def approved_comments(self):
-        return self.comments.filter(approved=True)
+        return self.comments
+
+    def get_tags(self):
+        ret = ""
+        for tag in self.tags.all():
+            ret = ret +" "+ tag.tag
+        return ret
+
+    def get_main_image(self):
+        ret = self.images.filter()
+        if ret:
+            return ret[0].url
+        else:
+            return ""
 
 class Image(models.Model):
     post = models.ForeignKey('blog.Post', related_name='images')
@@ -30,3 +43,10 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
+
+class Tag(models.Model):
+    post = models.ForeignKey('blog.Post', related_name='tags')
+    tag = models.CharField(blank=True, max_length=50, default="")
+
+    def get_tag(self):
+        return str(self.tag).replace("#","")
