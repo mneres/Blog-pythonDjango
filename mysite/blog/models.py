@@ -7,7 +7,7 @@ class Post(models.Model):
     text = models.TextField()
     created_date = models.DateTimeField(
             default=timezone.now)
-    url = models.CharField(max_length=200)
+    url = models.CharField(max_length=200, default='')
 
     def __str__(self):
         return self.title
