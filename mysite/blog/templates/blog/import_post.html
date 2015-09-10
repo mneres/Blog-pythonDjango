@@ -2,8 +2,8 @@
 {% extends 'blog/base.html' %}
 {% block content %}
     <div class="form-group">
-        {% if form.errors %}
-        <p>Erro ao importar Post</p>
+        {% if msg %}
+            <p>{{msg}}</p>
         {% endif %}
         <h1>Importar Post</h1>
         <form method="GET" action="/post/import/load">

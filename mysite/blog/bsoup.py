@@ -18,7 +18,17 @@ def safe_html(html):
 
     soup = BeautifulSoup(html, "html.parser")
 
+    '''if soup.findAll("article"):
+        param = "article"
+
     # now strip HTML we don't like.
+    if param != "":
+        for tag in soup.findAll(param):
+            if tag.name != param:
+                tag.extract()
+            else:
+                tag.attrs = [(a[0], safe_css(a[0], a[1])) for a in tag.attrs if _attr_name_whitelisted(a[0])]
+    else:'''
     for tag in soup.findAll():
         if (len(tag.text) == 0) or (tag.name.lower() in blacklist) or (tag.name.lower() == "ul"):
             tag.extract()
@@ -30,8 +40,6 @@ def safe_html(html):
     for comment in comments:
         comment.extract()
 
-
-    #soup = clear_menu(soup)
     safe_html = str(soup)
 
     if safe_html == ", -":

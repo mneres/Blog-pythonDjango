@@ -14,10 +14,11 @@
 
     <hr>
 
-    {% for image in post.images.all %}
-        {{image.url}}<br/>
-    {% endfor %}
-
+    <div class="row">
+        {% for image in post.images.all %}
+            {{image.url}}<br/>
+        {% endfor %}
+    </div>
 
     <hr>
     {% for comment in post.comments.all %}

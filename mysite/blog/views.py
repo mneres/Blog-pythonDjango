@@ -130,22 +130,47 @@ def post_add_tag(request, pk):
                 tag.save()
     return render(request, 'blog/import_post_add_tag.html', {"msg": "Post Cadastrado com sucesso!", "post": post})
 
+def get_post_by_title(title):
+    posts = Post.objects.filter(title=title)
+    for i in posts:
+        return False
+    return True
+
 @csrf_exempt
 @login_required
 def soup_load_post(request):
+    imgs = []
     try:
         url=request.GET['url']
-        imgs = []
+        url_aux = str(url).replace("http://", "")
+        url_aux = str(url_aux).replace("https://", "")
+        url_aux = str(url_aux).replace("www.", "")
+        url_aux = url_aux[0:9]
+
         req = urllib.request.Request(url, headers={'User-Agent' : "Magic Browser"})
         with urllib.request.urlopen(req) as response:
             page = response.read()
 
         soup = BeautifulSoup(page, "html.parser")
+
         title = soup("title")
+        title = str(title).replace("[<title>", "")
+        title = str(title).replace("</title>]", "")
+
+        if get_post_by_title(title) == False:
+            return render(request, 'blog/import_post.html', {"msg": "Este post já foi cadastrado!"})
 
         for img in soup.find_all('img'):
-            if img['src'].find("http") == 0:
-                imgs.append(img['src'])
+            if (img['src'].find("http") == 0 or img['src'].find("https") == 0 or img['src'].find("//") == 0):
+
+                img_url = str(img['src']).replace("http://", "")
+                img_url= str(img_url).replace("https://", "")
+                img_url = str(img_url).replace("www.", "")
+                img_url = str(img_url).replace("//", "")
+                img_url = img_url[0:9]
+
+                if str(img_url).__eq__(url_aux):
+                    imgs.append(img['src'])
 
         page = safe_html(page)
 
@@ -165,5 +190,5 @@ def soup_load_post(request):
         return redirect('blog.views.import_post_add_tag', pk=post.pk)
 
     except Exception as e:
-        return render(request, 'blog/import_post.html', {"msg": "Link está zoado!"})
+        return render(request, 'blog/import_post.html', {"msg": "Problemas com o link adicionado, tente novamente."})
 

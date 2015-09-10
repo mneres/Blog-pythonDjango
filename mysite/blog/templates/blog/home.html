@@ -38,7 +38,7 @@
                             <div class="media">
                                 {% if post.get_main_image %}
                                     <a href="{% url 'blog.views.post_detail' pk=post.pk %}" class="pull-left">
-                                        <img src="{{post.get_main_image}}" class="media-object" width="90px" height="90px">
+                                        <img src="{{post.get_main_image}}" class="media-object" width="90px" height="90px"/>
                                     </a>
                                 {% endif %}
                                 <div class="media-body">
